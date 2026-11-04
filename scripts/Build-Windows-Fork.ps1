@@ -3,7 +3,8 @@ param(
     [string]$DotnetPath,
     [string]$NodePath,
     [switch]$SkipFrontend,
-    [switch]$NoRestore
+    [switch]$NoRestore,
+    [switch]$ForceRestore
 )
 
 $ErrorActionPreference = 'Stop'
@@ -16,13 +17,15 @@ if (Test-Path -LiteralPath $localSettingsPath) {
     if (-not $NodePath) { $NodePath = $localSettings.NodePath }
     if ($localSettings.DotnetCliHome) { $env:DOTNET_CLI_HOME = $localSettings.DotnetCliHome }
     if ($localSettings.NugetPackages) { $env:NUGET_PACKAGES = $localSettings.NugetPackages }
-    if ($localSettings.NoRestore) { $NoRestore = $true }
+    if ($localSettings.NoRestore -and -not $ForceRestore) { $NoRestore = $true }
 }
 if (-not $DotnetPath) { $DotnetPath = 'dotnet' }
 if (-not $NodePath) { $NodePath = 'node' }
 $dotnet = (Get-Command $DotnetPath -ErrorAction Stop).Source
 $node = (Get-Command $NodePath -ErrorAction Stop).Source
 $dotnetRoot = Split-Path -Parent $dotnet
+$env:DOTNET_ROOT = $dotnetRoot
+$env:PATH = "$(Split-Path -Parent $node);$dotnetRoot;$env:PATH"
 $outputRoot = Join-Path $repo '_output'
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $package = Join-Path $outputRoot "Kavita-Fork-$stamp"
