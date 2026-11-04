@@ -599,6 +599,7 @@ public sealed class DataContext : IdentityDbContext<AppUser, AppRole, int,
         // Series indexes for search
         builder.Entity<Series>(entity =>
         {
+            entity.Property(s => s.ManhwaSpeedMultiplier).HasDefaultValue(2f);
             entity.HasIndex(s => new { s.LibraryId, s.Format, s.NormalizedName })
                 .HasDatabaseName("IX_Series_LibraryId_Format_NormalizedName");
 

@@ -3048,6 +3048,11 @@
     },
 
     "collection-detail": {
+        "pin-sidebar": "Add to sidebar",
+        "pin-sidebar-success": "Added to the sidebar. Use sidebar customization to reorder or remove it.",
+        "pin-sidebar-name-exists": "Could not create the sidebar entry. A smart filter with this name may already exist; check sidebar customization or rename the collection.",
+        "pin-sidebar-saved-only": "The filter was saved, but could not be added to the sidebar. Add it from sidebar customization.",
+        "pin-sidebar-error": "Could not add this collection to the sidebar. Please try again.",
         "no-data": "There are no items. Try adding a series.",
         "no-data-filtered": "No items match your current filter.",
         "sync-progress": "Series Collected: {{title}}",
@@ -3716,6 +3721,13 @@
     },
 
     "edit-series-modal": {
+        "reading-style-label": "Reading style",
+        "reading-style-help": "Choose how this series opens in the image reader. Your reading profile remains unchanged.",
+        "reading-style-profile": "Use reading profile",
+        "reading-style-manga": "Manga (paged)",
+        "reading-style-manhwa": "Manhwa (scrolling)",
+        "manhwa-speed-label": "Manhwa estimate speed",
+        "manhwa-speed-help": "Estimated pages per minute compared with manga (1–10 times). Default: 2. This affects estimates, not page counts or actual reading time.",
         "title": "{{seriesName}} Details",
         "general-tab": "{{tabs.general-tab}}",
         "metadata-tab": "{{tabs.metadata-tab}}",
@@ -3967,7 +3979,8 @@
 
     "next-expected-card": {
         "title": "~{{date}}",
-        "upcoming-title": "Upcoming"
+        "upcoming-title": "Estimated",
+        "estimate-explanation": "Based on when items were added to your library"
     },
 
     "server-stats": {
@@ -4066,6 +4079,12 @@
     },
 
     "profile-activity": {
+        "historical-label": "Read in the past",
+        "review-suggested": "Review suggested",
+        "mark-historical": "Mark as read in the past",
+        "restore-activity": "Count as activity again",
+        "reclassify-error": "Could not update this activity. Please try again.",
+        "historical-help": "Mark imported progress as read in the past to exclude it from activity statistics. Reading progress is kept, and you can undo this later.",
         "time-filter-title": "{{username}}'s activity through",
         "pages-count": "{{series-detail.pages-count}}",
         "words-count": "{{series-detail.words-count}}",
@@ -4154,6 +4173,8 @@
     },
 
     "activity-graph": {
+        "review-legend": "Yellow outline: unusually high activity; review in the Activity tab.",
+        "review-suggested": "Review suggested: this may include progress marked as read.",
         "title": "Reading Activity",
         "day-of-week-alt": "Day of the Week",
         "less": "Less",

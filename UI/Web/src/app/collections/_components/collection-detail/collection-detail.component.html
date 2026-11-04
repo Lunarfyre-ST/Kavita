@@ -10,7 +10,15 @@
                 <span class="ms-2">{{collectionTag()!.title}}</span>
                 <app-card-actionables [entity]="collectionTag()!" [disabled]="actionInProgress()" [actions]="collectionTagActions()"
                                       [labelBy]="collectionTag()!.title" iconClass="fa-ellipsis-v" (actionHandler)="handleActionCallback($event)" />
+                @if (!accountService.hasReadOnlyRole()) {
+                  <button class="btn btn-outline-primary btn-sm ms-2" [disabled]="sidebarPinInProgress() || sidebarPinMessage() === 'success'" (click)="pinToSidebar()">
+                    <i class="fa fa-thumbtack" aria-hidden="true"></i> {{t('pin-sidebar')}}
+                  </button>
+                }
               </h4>
+              @if (sidebarPinMessage(); as message) {
+                <p role="status">{{t('pin-sidebar-' + message)}}</p>
+              }
             }
             <h5 subtitle class="ms-2 subtitle-with-actionables">{{t('item-count', {num: series().length})}}</h5>
           </ng-container>

@@ -18,6 +18,9 @@ export class FilterService {
     const apiRoute = FilterUtilitiesService.getApiRoutePrefixForEntityType('filter/update/', filter.entityType) ;
     return this.httpClient.post(this.baseUrl + apiRoute, filter);
   }
+  createSeriesFilter(filter: FilterV2<number>) {
+    return this.httpClient.post(this.baseUrl + 'filter/create/series', filter);
+  }
   getAllFilters() {
     return this.httpClient.get<Array<SmartFilter>>(this.baseUrl + 'filter');
   }

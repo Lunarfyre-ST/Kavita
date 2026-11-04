@@ -4,6 +4,7 @@ export interface ReadingHistoryItem {
   sessionDataIds: number[];
   id: number;
   isGeneratedSession: boolean;
+  isHistorical: boolean;
   sessionId: number;
   startTimeUtc: string;
   endTimeUtc: string;
@@ -26,6 +27,7 @@ export interface ReadingHistoryItem {
 }
 
 export interface ReadingHistoryChapterItem {
+  activityId: number;
   chapterId: number;
   label: string;
 

@@ -13,6 +13,7 @@ import {
 import {ImageService} from '../../../_services/image.service';
 import {Pagination} from '../../../_models/pagination';
 import {ReadingHistoryViewerComponent} from "../../../shared/reading-history-viewer/reading-history-viewer.component";
+import {AccountService} from "../../../_services/account.service";
 
 
 @Component({
@@ -30,6 +31,7 @@ import {ReadingHistoryViewerComponent} from "../../../shared/reading-history-vie
 export class ProfileActivityComponent {
 
   private readonly statsService = inject(StatisticsService);
+  protected readonly accountService = inject(AccountService);
   protected readonly imageService = inject(ImageService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly document = inject(DOCUMENT);
@@ -97,5 +99,9 @@ export class ProfileActivityComponent {
 
   updateFilter(event: StatsFilter): void {
     this.filter.set(event);
+  }
+
+  protected refreshActivity(): void {
+    this.loadPage(this.currentPage(), this.pageSize);
   }
 }

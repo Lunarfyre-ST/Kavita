@@ -97,6 +97,11 @@ export class ActivityGraphComponent {
     return date.date === DateTime.now().toFormat('yyyy-MM-dd');
   }
 
+  protected suggestReview(day: ActivityGraphDataEntry): boolean {
+    return (day.totalPages >= 500 && day.totalTimeReadingSeconds < day.totalPages) ||
+      (day.totalChaptersFullyRead >= 20 && day.totalTimeReadingSeconds < 1800);
+  }
+
   private generateWeeks(): WeekRow[] {
     const year = this.year();
     const startDate = new Date(year, 0, 1); // January 1st

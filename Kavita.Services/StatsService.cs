@@ -454,6 +454,7 @@ public class StatsService : IStatsService
             var activityData = await _context.AppUserReadingSession
                 .Where(s => s.AppUserId == user.Id)
                 .SelectMany(s => s.ActivityData)
+                .Where(ad => !ad.IsHistorical)
                 .Select(ad => new
                 {
                     ad.PagesRead,

@@ -8,6 +8,9 @@ public sealed record ReadingListInfoDto : IHasReadTimeEstimate
     /// Total Pages across all Reading List Items
     /// </summary>
     public int Pages { get; set; }
+    /// <summary>Image pages weighted by each series' estimated reading speed.</summary>
+    [global::System.Text.Json.Serialization.JsonIgnore]
+    public double EstimatedImagePages { get; set; }
     /// <summary>
     /// Total Word count across all Reading List Items
     /// </summary>

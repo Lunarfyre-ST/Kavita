@@ -17,6 +17,10 @@ public sealed record UpdateSeriesDto : IUpdateExternalMetadataIds
     public bool SortNameLocked { get; set; }
     public bool LocalizedNameLocked { get; set; }
 
+    [EnumDataType(typeof(SeriesReadingStyle))]
+    public SeriesReadingStyle? ReadingStyle { get; set; }
+    public float? ManhwaSpeedMultiplier { get; set; }
+
     /// <summary>
     /// Overrides the parent Library's default Metadata Provider for this Series only.
     /// Null means the Series should inherit the Library's default provider.

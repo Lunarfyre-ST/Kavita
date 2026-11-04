@@ -18,7 +18,7 @@ namespace Kavita.Database.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.14");
 
             modelBuilder.Entity("AppUserCollectionSeries", b =>
                 {
@@ -1795,6 +1795,9 @@ namespace Kavita.Database.Migrations
                     b.Property<int>("Format")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsHistorical")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("LibraryId")
                         .HasColumnType("INTEGER");
 
@@ -2361,6 +2364,11 @@ namespace Kavita.Database.Migrations
                     b.Property<int>("MangaBakaId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<float>("ManhwaSpeedMultiplier")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("REAL")
+                        .HasDefaultValue(2f);
+
                     b.Property<int>("MaxHoursToRead")
                         .HasColumnType("INTEGER");
 
@@ -2396,6 +2404,9 @@ namespace Kavita.Database.Migrations
 
                     b.Property<string>("PrimaryColor")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("ReadingStyle")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("SecondaryColor")
                         .HasColumnType("TEXT");

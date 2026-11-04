@@ -6,5 +6,17 @@
 
 .card-title-container {
   justify-content: center;
+  flex-direction: column;
+  text-align: center;
+
+  .card-title {
+    padding-bottom: 0.15rem;
+  }
+}
+
+.estimate-explanation {
+  font-size: 0.7rem;
+  line-height: 1.2;
+  padding-bottom: 0.5rem;
 }
 

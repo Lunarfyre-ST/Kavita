@@ -65,6 +65,9 @@ import {UserCollection} from "../../../_models/collection-tag";
 import {Series} from "../../../_models/series";
 import {Pagination} from "../../../_models/pagination";
 import {JumpbarService} from "../../../_services/jumpbar.service";
+import {FilterService} from "../../../_services/filter.service";
+import {NavService} from "../../../_services/nav.service";
+import {switchMap, throwError} from "rxjs";
 
 @Component({
   selector: 'app-collection-detail',
@@ -84,7 +87,7 @@ export class CollectionDetailComponent implements AfterContentChecked {
   private readonly route = inject(ActivatedRoute);
   private readonly seriesService = inject(SeriesService);
   private readonly actionFactoryService = inject(ActionFactoryService);
-  private readonly accountService = inject(AccountService);
+  protected readonly accountService = inject(AccountService);
   private readonly drawerService = inject(DrawerService);
   private readonly jumpbarService = inject(JumpbarService);
   private readonly messageHub = inject(MessageHubService);
@@ -93,6 +96,8 @@ export class CollectionDetailComponent implements AfterContentChecked {
   protected readonly breakpointService = inject(BreakpointService);
   private readonly scrollService = inject(ScrollService);
   private readonly metadataService = inject(MetadataService);
+  private readonly filterService = inject(FilterService);
+  private readonly navService = inject(NavService);
 
   protected readonly ScrobbleProvider = ScrobbleProvider;
 
@@ -124,6 +129,8 @@ export class CollectionDetailComponent implements AfterContentChecked {
   filter = signal<FilterV2<SeriesFilterField> | undefined>(undefined);
   filterSettings = signal(new SeriesFilterSettings());
   actionInProgress = signal(false);
+  sidebarPinInProgress = signal(false);
+  sidebarPinMessage = signal<'success' | 'name-exists' | 'saved-only' | 'error' | null>(null);
   filterActive = signal(false);
   jumpbarKeys = computed(() => this.jumpbarService.getJumpKeys(this.series(), (s: Series) => s.name));
 
@@ -207,6 +214,40 @@ export class CollectionDetailComponent implements AfterContentChecked {
       default:
         return true;
     }
+  }
+
+  pinToSidebar() {
+    const collection = this.collectionTag();
+    if (!collection || this.sidebarPinInProgress() || this.accountService.hasReadOnlyRole()) return;
+
+    this.sidebarPinInProgress.set(true);
+    this.sidebarPinMessage.set(null);
+    const filter = this.metadataService.createDefaultFilterDto<SeriesFilterField, SeriesSortField>('series');
+    filter.name = collection.title.trim();
+    filter.statements.push({field: SeriesFilterField.CollectionTags, value: `${collection.id}`, comparison: FilterComparison.Equal});
+    filter.statements.push({field: SeriesFilterField.CollapseSeriesRelationships, value: 'false', comparison: FilterComparison.Equal});
+
+    let saved = false;
+    this.filterService.createSeriesFilter(filter).pipe(
+      switchMap(() => {
+        saved = true;
+        return this.filterService.getAllFilters();
+      }),
+      switchMap(filters => {
+        const created = filters.find(item => item.name === filter.name);
+        return created ? this.navService.createSideNavStream(created.id) : throwError(() => new Error('Created filter not found'));
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: () => {
+        this.sidebarPinMessage.set('success');
+        this.sidebarPinInProgress.set(false);
+      },
+      error: err => {
+        this.sidebarPinMessage.set(saved ? 'saved-only' : err.status === 400 ? 'name-exists' : 'error');
+        this.sidebarPinInProgress.set(false);
+      }
+    });
   }
 
   ngAfterContentChecked(): void {

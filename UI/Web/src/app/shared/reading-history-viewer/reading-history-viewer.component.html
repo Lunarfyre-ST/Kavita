@@ -22,7 +22,7 @@
     }
 
     <div class="activity-list">
-      @for (entry of currentEntries(); track entry.sessionId) {
+      @for (entry of currentEntries(); track entry.sessionId + '_' + entry.seriesId + '_' + entry.isHistorical) {
         <div class="activity-entry p-3">
           <div class="row g-3">
             <div class="col-auto d-sm-block">
@@ -38,6 +38,11 @@
                     {{ entry.seriesName }}
                   </a>
                   <app-tag-badge>{{ entry.seriesFormat | mangaFormat }}</app-tag-badge>
+                  @if (entry.isHistorical) {
+                    <app-tag-badge>{{t('historical-label')}}</app-tag-badge>
+                  } @else if (allowReclassification() && suggestReview(entry)) {
+                    <app-tag-badge>{{t('review-suggested')}}</app-tag-badge>
+                  }
                 </div>
                 <span class="entry-date text-muted small text-nowrap">
                   {{ formatEntryDate(entry) }}
@@ -50,6 +55,12 @@
               <ng-container [ngTemplateOutlet]="readStatsTemplate()"
                             [ngTemplateOutletContext]="{ $implicit: entry, showInfo: true }">
               </ng-container>
+
+              @if (allowReclassification() && !accountService.hasReadOnlyRole()) {
+                <button class="btn btn-outline-primary btn-sm mt-2" [disabled]="updating()" (click)="toggleHistorical(entry)">
+                  {{t(entry.isHistorical ? 'restore-activity' : 'mark-historical')}}
+                </button>
+              }
 
               <div class="row mt-2">
                 @for (chapter of entry.chapters.slice(0, 5); track chapter.chapterId + '_' + chapter.pagesRead) {
@@ -107,6 +118,12 @@
     <ng-container [ngTemplateOutlet]="readStatsTemplate()"
                   [ngTemplateOutletContext]="{ $implicit: chapter, label: chapter.label }">
     </ng-container>
+    @if (allowReclassification() && !accountService.hasReadOnlyRole()) {
+      <button *transloco="let t; prefix: 'profile-activity'" class="btn btn-outline-primary btn-sm" [disabled]="updating()"
+              (click)="$event.stopPropagation(); toggleHistorical(entry, [chapter.activityId])">
+        {{t(entry.isHistorical ? 'restore-activity' : 'mark-historical')}}
+      </button>
+    }
   </div>
 </ng-template>
 

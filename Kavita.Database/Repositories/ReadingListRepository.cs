@@ -222,6 +222,10 @@ public class ReadingListRepository(DataContext context, IMapper mapper) : IReadi
             {
                 WordCount = rl.Items.Sum(item => item.Chapter.WordCount),
                 Pages = rl.Items.Sum(item => item.Chapter.Pages),
+                EstimatedImagePages = rl.Items.Sum(item => (double)item.Chapter.Pages /
+                    (item.Series.Format != MangaFormat.Epub && item.Series.ReadingStyle == SeriesReadingStyle.Manhwa &&
+                     item.Series.ManhwaSpeedMultiplier >= 1f && item.Series.ManhwaSpeedMultiplier <= 10f
+                        ? item.Series.ManhwaSpeedMultiplier : 1f)),
                 IsAllEpub = rl.Items.All(item => item.Series.Format == MangaFormat.Epub),
             })
             .FirstOrDefaultAsync(ct);

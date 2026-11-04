@@ -627,7 +627,7 @@ public class ReaderService(IUnitOfWork unitOfWork, ILogger<ReaderService> logger
 
         var pagesLeft = chapter.Pages - chapter.PagesRead;
 
-        return GetTimeEstimate(0, pagesLeft, false);
+        return GetTimeEstimate(0, pagesLeft, false, GetImageReadingSpeedMultiplier(series.ReadingStyle, series.ManhwaSpeedMultiplier));
     }
 
     public async Task<HourEstimateRangeDto> GetEstimateFromPageForChapter(int userId, int seriesId, int chapterId,
@@ -657,10 +657,16 @@ public class ReaderService(IUnitOfWork unitOfWork, ILogger<ReaderService> logger
 
         var pagesRead = Math.Max(0, chapter.PagesRead - page);
 
-        return GetTimeEstimate(0, pagesRead, false);
+        return GetTimeEstimate(0, pagesRead, false, GetImageReadingSpeedMultiplier(series.ReadingStyle, series.ManhwaSpeedMultiplier));
     }
 
-    public static HourEstimateRangeDto GetTimeEstimate(long wordCount, int pageCount, bool isEpub)
+    public static float GetImageReadingSpeedMultiplier(SeriesReadingStyle style, float manhwaSpeedMultiplier)
+    {
+        return style == SeriesReadingStyle.Manhwa && float.IsFinite(manhwaSpeedMultiplier)
+            ? Math.Clamp(manhwaSpeedMultiplier, 1f, 10f) : 1f;
+    }
+
+    public static HourEstimateRangeDto GetTimeEstimate(long wordCount, int pageCount, bool isEpub, float imageSpeedMultiplier = 1f, double? estimatedImagePages = null)
     {
         if (isEpub)
         {
@@ -676,14 +682,16 @@ public class ReaderService(IUnitOfWork unitOfWork, ILogger<ReaderService> logger
             };
         }
 
-        var minHoursPages = Math.Max((int) Math.Round((pageCount / MinPagesPerMinute / 60F)), 0);
-        var maxHoursPages = Math.Max((int) Math.Round((pageCount / MaxPagesPerMinute / 60F)), 0);
+        var speed = float.IsFinite(imageSpeedMultiplier) ? Math.Clamp(imageSpeedMultiplier, 1f, 10f) : 1f;
+        var estimatePages = estimatedImagePages ?? pageCount / speed;
+        var minHoursPages = Math.Max((int) Math.Round(estimatePages / MinPagesPerMinute / 60), 0);
+        var maxHoursPages = Math.Max((int) Math.Round(estimatePages / MaxPagesPerMinute / 60), 0);
 
         return new HourEstimateRangeDto
         {
             MinHours = Math.Min(minHoursPages, maxHoursPages),
             MaxHours = Math.Max(minHoursPages, maxHoursPages),
-            AvgHours = pageCount / AvgPagesPerMinute / 60F,
+            AvgHours = (float)(estimatePages / AvgPagesPerMinute / 60),
             PageCount = pageCount
         };
     }

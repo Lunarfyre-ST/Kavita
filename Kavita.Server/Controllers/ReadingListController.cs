@@ -694,7 +694,6 @@ public class ReadingListController(
     /// <returns></returns>
     [HttpGet("info")]
     [ReadingListAccess]
-    [ResponseCache(CacheProfileName = ResponseCacheProfiles.Hour, VaryByQueryKeys = ["readingListId"])]
     public async Task<ActionResult<ReadingListInfoDto?>> GetReadingListInfo(int readingListId)
     {
         var ct = HttpContext.RequestAborted;
@@ -702,7 +701,8 @@ public class ReadingListController(
 
         if (result == null) return Ok(null);
 
-        var timeEstimate = ReaderService.GetTimeEstimate(result.WordCount, result.Pages, result.IsAllEpub);
+        var timeEstimate = ReaderService.GetTimeEstimate(result.WordCount, result.Pages, result.IsAllEpub,
+            estimatedImagePages: result.EstimatedImagePages);
 
         result.MinHoursToRead = timeEstimate.MinHours;
         result.AvgHoursToRead = timeEstimate.AvgHours;

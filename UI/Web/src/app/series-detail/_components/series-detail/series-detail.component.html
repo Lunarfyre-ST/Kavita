@@ -421,6 +421,8 @@
                       [currentPage]="readingHistoryCurrentPage()"
                       [isLoading]="isLoadingReadingHistory()"
                       [pageSize]="READING_HISTORY_PAGE_SIZE"
+                      [allowReclassification]="true"
+                      (activityUpdated)="loadReadingHistory(readingHistoryCurrentPage(), READING_HISTORY_PAGE_SIZE)"
                       (pageChange)="loadReadingHistory($event.page, $event.pageSize)"
                     />
                   </div>

@@ -38,7 +38,7 @@ import {
   applyExternalMetadataIdRules,
   EditExternalMetadataFormComponent
 } from "../../../shared/_components/edit-external-metadata-form/edit-external-metadata-form.component";
-import {form, FormField, pattern, required} from "@angular/forms/signals";
+import {disabled, form, FormField, max, min, pattern, required} from "@angular/forms/signals";
 import {MangaFormat} from "../../../_models/manga-format";
 import {LibraryType} from "../../../_models/library/library";
 import {
@@ -64,6 +64,7 @@ import {SeriesMetadata} from "../../../_models/metadata/series-metadata";
 import {LooseLeafOrDefaultNumber, SpecialVolumeNumber} from "../../../_models/chapter";
 import {Language} from "../../../_models/metadata/language";
 import {Series} from "../../../_models/series";
+import {SeriesReadingStyle} from "../../../_models/series-reading-style";
 import {Tag} from "../../../_models/tag";
 import {AllMetadataProviders, MetadataProvider} from "../../../_models/kavitaplus/metadata-provider.enum";
 import {TimeDifferencePipe} from "../../../_pipes/time-difference.pipe";
@@ -92,6 +93,8 @@ interface MetadataFormModel extends PersonFields {
 }
 
 interface FormModel extends IHasMetadataIds {
+  readingStyle: SeriesReadingStyle;
+  manhwaSpeedMultiplier: number;
   id: number;
   name: string;
   localizedName: string;
@@ -158,6 +161,8 @@ export class EditSeriesModalComponent implements OnInit {
   series = model.required<Series>();
 
   private readonly formModel = signal<FormModel>({
+    readingStyle: SeriesReadingStyle.FollowProfile,
+    manhwaSpeedMultiplier: 2,
     coverImage: '',
     id: 0,
     name: '',
@@ -185,6 +190,10 @@ export class EditSeriesModalComponent implements OnInit {
     }
   });
   protected readonly formGroup = form(this.formModel, p => {
+    disabled(p.manhwaSpeedMultiplier, {when: ({valueOf}) => valueOf(p.readingStyle) !== SeriesReadingStyle.Manhwa});
+    min(p.manhwaSpeedMultiplier, 1);
+    max(p.manhwaSpeedMultiplier, 10);
+    required(p.manhwaSpeedMultiplier);
     required(p.name);
     required(p.sortName);
     pattern(p.metadata.releaseYear, /^[1-9]\d{3}$/);
@@ -239,6 +248,8 @@ export class EditSeriesModalComponent implements OnInit {
   private readonly peopleSettings = signal<Partial<Record<PersonRole, TypeaheadConfig<Person>>>>({});
 
   protected readonly ageRatings = signal<AgeRatingDto[]>([]);
+  protected readonly SeriesReadingStyle = SeriesReadingStyle;
+  protected readonly readingStyleOptions = [SeriesReadingStyle.FollowProfile, SeriesReadingStyle.Manga, SeriesReadingStyle.Manhwa];
   protected readonly publicationStatuses = signal<PublicationStatusDto[]>([]);
   protected readonly metadata = signal<SeriesMetadata | null>(null);
   private selectedCover = '';
@@ -268,6 +279,8 @@ export class EditSeriesModalComponent implements OnInit {
     this.formModel.update(m => ({
       ...m,
       id: series.id,
+      readingStyle: series.readingStyle ?? SeriesReadingStyle.FollowProfile,
+      manhwaSpeedMultiplier: series.manhwaSpeedMultiplier ?? 2,
       name: series.name,
       localizedName: series.localizedName,
       sortName: series.sortName,
@@ -397,6 +410,8 @@ export class EditSeriesModalComponent implements OnInit {
     const seriesPayload = {
       ...this.series(),
       ...model,
+      manhwaSpeedMultiplier: model.readingStyle === SeriesReadingStyle.Manhwa
+        ? model.manhwaSpeedMultiplier : this.series().manhwaSpeedMultiplier ?? 2,
       metadataProviderOverride: model.metadataProviderOverride === '' ? null : parseInt(model.metadataProviderOverride, 10) as MetadataProvider
     };
     writeFieldLocks(seriesPayload, this.locks);

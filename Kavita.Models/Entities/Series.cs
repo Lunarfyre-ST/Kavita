@@ -89,6 +89,10 @@ public class Series : IEntityDate, IHasReadTimeEstimate, IHasCoverImage, IHasMet
     /// </summary>
     public MangaFormat Format { get; set; } = MangaFormat.Unknown;
 
+    public SeriesReadingStyle ReadingStyle { get; set; } = SeriesReadingStyle.FollowProfile;
+    /// <summary>Speed relative to the normal image-page estimate, used for manhwa.</summary>
+    public float ManhwaSpeedMultiplier { get; set; } = 2f;
+
     public string PrimaryColor { get; set; } = string.Empty;
     public string SecondaryColor { get; set; } = string.Empty;
 

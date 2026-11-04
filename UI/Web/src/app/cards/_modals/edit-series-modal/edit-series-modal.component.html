@@ -13,6 +13,30 @@
     @if (series()) {
       <ng-template [appEditTab]="Tabs.General">
         <div class="row">
+          <div class="col-md-12 mb-3">
+            <app-setting-item [title]="t('reading-style-label')" [subtitle]="t('reading-style-help')" [toggleOnViewClick]="false" [showEdit]="false" [control]="formGroup.readingStyle">
+              <ng-template #view>
+                <app-setting-select [options]="readingStyleOptions" [formField]="formGroup.readingStyle">
+                  <ng-template #template let-style>
+                    {{t(style === SeriesReadingStyle.Manga ? 'reading-style-manga' : style === SeriesReadingStyle.Manhwa ? 'reading-style-manhwa' : 'reading-style-profile')}}
+                  </ng-template>
+                </app-setting-select>
+              </ng-template>
+            </app-setting-item>
+          </div>
+        </div>
+        @if (formGroup.readingStyle().value() === SeriesReadingStyle.Manhwa) {
+          <div class="row">
+            <div class="col-md-12 mb-3">
+              <app-setting-item [title]="t('manhwa-speed-label')" [subtitle]="t('manhwa-speed-help')" [toggleOnViewClick]="false" [showEdit]="false" [control]="formGroup.manhwaSpeedMultiplier">
+                <ng-template #view>
+                  <input class="form-control" type="number" step="0.25" [formField]="formGroup.manhwaSpeedMultiplier" [appFormField]="formGroup.manhwaSpeedMultiplier">
+                </ng-template>
+              </app-setting-item>
+            </div>
+          </div>
+        }
+        <div class="row">
           <div class="mb-3" style="width: 100%">
             <app-setting-item [title]="t('name-label')" [toggleOnViewClick]="false" [showEdit]="false" [control]="formGroup.name">
               <ng-template #view>

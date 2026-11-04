@@ -51,6 +51,7 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
 
         var activityData = await context.AppUserReadingSessionActivityData
             .AsNoTracking()
+            .Where(a => !a.IsHistorical)
             .Where(a => a.ReadingSession.AppUserId == userId)
             .Where(a => libraryIds.Contains(a.LibraryId))
             .Select(a => new
@@ -73,12 +74,7 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
             .Where(a => a.EndTimeUtc != null)
             .Sum(a => (a.EndTimeUtc!.Value - a.StartTimeUtc).TotalHours));
 
-        var lastActive = await context.AppUserReadingSession
-            .AsNoTracking()
-            .Where(s => s.AppUserId == userId)
-            .Select(s => s.EndTimeUtc)
-            .DefaultIfEmpty()
-            .MaxAsync(cancellationToken: ct);
+        var lastActive = activityData.Select(a => a.EndTimeUtc).DefaultIfEmpty().Max();
 
         // Average reading time per week
         var earliestReadDate = activityData
@@ -418,6 +414,7 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
         if (counts == null) return new ServerStatisticsDto();
 
         var totalReadingHours = await context.AppUserReadingSessionActivityData
+            .Where(a => !a.IsHistorical)
             .Where(a => a.EndTimeUtc != null)
             .Select(a => new { a.StartTimeUtc, EndTimeUtc = a.EndTimeUtc!.Value })
             .ToListAsync(ct)
@@ -470,6 +467,7 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
 
         var rawData = await context.AppUserReadingSessionActivityData
             .AsNoTracking()
+            .Where(a => !a.IsHistorical)
             .Where(a => a.StartTimeUtc >= startDate && a.StartTimeUtc <= endDate)
             .Where(a => a.EndTimeUtc != null)
             .WhereIf(userId > 0, a => a.ReadingSession.AppUserId == userId)
@@ -552,6 +550,7 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
     {
         return await context.AppUserReadingSessionActivityData
             .AsNoTracking()
+            .Where(a => !a.IsHistorical)
             .WhereIf(userId > 0, a => a.ReadingSession.AppUserId == userId)
             .GroupBy(a => a.StartTimeUtc.DayOfWeek)
             .OrderBy(g => g.Key)
@@ -570,6 +569,7 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
     {
         return await context.AppUserReadingSessionActivityData
             .AsNoTracking()
+            .Where(a => !a.IsHistorical)
             .WhereIf(userId > 0, a => a.ReadingSession.AppUserId == userId)
             .GroupBy(a => a.StartTimeUtc.Year)
             .OrderBy(g => g.Key)
@@ -588,6 +588,7 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
     {
         return await context.AppUserReadingSessionActivityData
             .AsNoTracking()
+            .Where(a => !a.IsHistorical)
             .Where(a => a.WordsRead > 0)
             .WhereIf(userId > 0, a => a.ReadingSession.AppUserId == userId)
             .GroupBy(a => a.StartTimeUtc.Year)
@@ -749,6 +750,9 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
                     SessionId = session.Id,
                     SessionStartUtc = session.StartTimeUtc,
                     SessionEndUtc = session.EndTimeUtc!.Value,
+                    SessionHasHistorical = session.ActivityData.Any(a => a.IsHistorical),
+                    ActivityStartUtc = activity.StartTimeUtc,
+                    ActivityEndUtc = activity.EndTimeUtc,
                     activity.ChapterId,
                     activity.PagesRead,
                     activity.WordsRead,
@@ -769,8 +773,9 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
                     DateKey = dayGroup.Key.ToString("yyyy-MM-dd"),
                     TotalTimeReadingSeconds = dayGroup
                         .GroupBy(x => x.SessionId)
-                        .Sum(sessionGroup =>
-                            (int)(sessionGroup.First().SessionEndUtc - sessionGroup.First().SessionStartUtc).TotalSeconds),
+                        .Sum(sessionGroup => sessionGroup.First().SessionHasHistorical
+                            ? sessionGroup.Sum(a => a.ActivityEndUtc.HasValue ? (int)(a.ActivityEndUtc.Value - a.ActivityStartUtc).TotalSeconds : 0)
+                            : (int)(sessionGroup.First().SessionEndUtc - sessionGroup.First().SessionStartUtc).TotalSeconds),
                     TotalPages = dayGroup.Sum(x => x.PagesRead),
                     TotalWords = dayGroup.Sum(x => x.WordsRead),
                     TotalChaptersFullyRead = dayGroup
@@ -859,6 +864,9 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
                 SeriesFormat = a.Series.Format,
                 SessionStart = a.ReadingSession.StartTimeUtc,
                 SessionEnd = a.ReadingSession.EndTimeUtc,
+                SessionHasHistorical = a.ReadingSession.ActivityData.Any(x => x.IsHistorical),
+                ActivityStart = a.StartTimeUtc,
+                ActivityEnd = a.EndTimeUtc,
                 Finished = a.EndPage >= a.Chapter.Pages,
             })
             .WhereIf(booksOnly, d => d.SeriesFormat == MangaFormat.Pdf || d.SeriesFormat == MangaFormat.Epub)
@@ -867,8 +875,10 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
 
         var sessionDurations = activities
             .Where(a => a.SessionEnd.HasValue)
-            .GroupBy(a => new { a.SessionStart, a.SessionEnd })
-            .Sum(g => (g.Key.SessionEnd!.Value - g.Key.SessionStart).TotalHours);
+            .GroupBy(a => new { a.SessionStart, a.SessionEnd, a.SessionHasHistorical })
+            .Sum(g => g.Key.SessionHasHistorical
+                ? g.Sum(a => a.ActivityEnd.HasValue ? (a.ActivityEnd.Value - a.ActivityStart).TotalHours : 0)
+                : (g.Key.SessionEnd!.Value - g.Key.SessionStart).TotalHours);
 
         var booksRead = new HashSet<int>();
         var comicsRead = new HashSet<int>();
@@ -1368,6 +1378,7 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
 
         // Fetch activity data for all users in the time period
         var activityData = await context.AppUserReadingSessionActivityData
+            .Where(a => !a.IsHistorical)
             .Between(a => a.StartTimeUtc, startDate, endDate)
             .Where(a => a.EndTimeUtc != null)
             .Select(a => new
@@ -1516,7 +1527,7 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
 
         var query = context.AppUserReadingSessionActivityData
             .ApplyStatsFilter(filter, userId, socialPreferences, requestingUser, isAggregate: false,
-                onlyCompleted: false)
+                onlyCompleted: false, includeHistorical: true)
             .WhereIf(filter.Libraries.Count > 0, a => filter.Libraries.Contains(a.LibraryId));
 
         return await GetReadingHistoryItems(userId, userTimeZone, query, userParams, ct);
@@ -1540,6 +1551,7 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
                 a.Id,
                 a.AppUserReadingSessionId,
                 a.ReadingSession.IsGenerated,
+                a.IsHistorical,
                 a.StartTimeUtc,
                 EndTimeUtc = a.EndTimeUtc!.Value,
 
@@ -1579,11 +1591,12 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
             .OrderByDescending(a => a.StartTimeUtc);
 
         var groupedQuery = query
-            .GroupBy(a => new { a.AppUserReadingSessionId, a.SeriesId })
+            .GroupBy(a => new { a.AppUserReadingSessionId, a.SeriesId, a.IsHistorical })
             .Select(g => new
             {
                 g.Key.AppUserReadingSessionId,
                 g.Key.SeriesId,
+                g.Key.IsHistorical,
                 MinStart = g.Min(x => x.StartTimeUtc), // preserve ordering
             })
             .OrderByDescending(g => g.MinStart);
@@ -1593,7 +1606,7 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
         var pageGroupKeys = await groupedQuery
             .Skip((userParams.PageNumber - 1) * userParams.PageSize)
             .Take(userParams.PageSize)
-            .Select(g => new { g.AppUserReadingSessionId, g.SeriesId })
+            .Select(g => new { g.AppUserReadingSessionId, g.SeriesId, g.IsHistorical })
             .ToListAsync(ct);
 
         if (pageGroupKeys.Count == 0)
@@ -1607,11 +1620,11 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
             .ToListAsync(ct);
 
         var keySet = pageGroupKeys
-            .Select(k => (k.AppUserReadingSessionId, k.SeriesId))
+            .Select(k => (k.AppUserReadingSessionId, k.SeriesId, k.IsHistorical))
             .ToHashSet();
 
         items = items
-            .Where(a => keySet.Contains((a.AppUserReadingSessionId, a.SeriesId)))
+            .Where(a => keySet.Contains((a.AppUserReadingSessionId, a.SeriesId, a.IsHistorical)))
             .ToList();
 
         var libraryTypes = items.Select(i => i.LibraryType).Distinct().ToList();
@@ -1625,7 +1638,7 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
 
         // Convert to DTOs with local time
         var dtos = items
-            .GroupBy(a => new { a.AppUserReadingSessionId, a.SeriesId })
+            .GroupBy(a => new { a.AppUserReadingSessionId, a.SeriesId, a.IsHistorical })
             .Select(x =>
             {
                 var first = x.First();
@@ -1665,6 +1678,7 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
 
                     return new ReadingHistoryChapterItemDto
                     {
+                        ActivityId = s.Id,
                         ChapterId = s.ChapterId,
                         Label = namingContext.BuildChapterTitle(volumeDto, chapterDto),
                         StartTimeUtc = s.StartTimeUtc,
@@ -1686,6 +1700,7 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
                     SessionDataIds =  x.Select(s => s.Id).ToList(),
                     SessionId = first.AppUserReadingSessionId,
                     IsGeneratedSession = first.IsGenerated,
+                    IsHistorical = first.IsHistorical,
                     StartTimeUtc = startTime,
                     EndTimeUtc = endTime,
                     LocalDate = localStart.Date,

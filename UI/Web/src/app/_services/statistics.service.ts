@@ -317,6 +317,10 @@ export class StatisticsService {
     return httpResource<number>(() => this.baseUrl + `stats/total-reads?userId=${userId()}`).asReadonly();
   }
 
+  setHistoricalActivity(activityIds: number[], isHistorical: boolean) {
+    return this.httpClient.post(`${this.baseUrl}stats/reading-history/historical`, {activityIds, isHistorical});
+  }
+
   getReadingHistory(
     filter: StatsFilter,
     userId: number,

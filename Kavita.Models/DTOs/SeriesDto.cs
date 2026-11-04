@@ -61,6 +61,8 @@ public sealed record SeriesDto : IHasReadTimeEstimate, IHasCoverImage, IHasMetad
     /// <inheritdoc cref="API.Entities.Series.Format"/>
     [EnumDataType(typeof(MangaFormat))]
     public MangaFormat Format { get; set; }
+    public SeriesReadingStyle ReadingStyle { get; set; }
+    public float ManhwaSpeedMultiplier { get; set; }
     /// <inheritdoc cref="API.Entities.Series.Created"/>
     public DateTime Created { get; set; }
 

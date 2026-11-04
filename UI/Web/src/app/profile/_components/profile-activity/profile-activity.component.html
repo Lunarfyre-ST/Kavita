@@ -5,12 +5,18 @@
                                    [locale]="'profile'" [userId]="memberInfo().id"/>
   </div>
 
+  @if (memberInfo().id === accountService.currentUser()?.id && !accountService.hasReadOnlyRole()) {
+    <p class="text-muted small">{{t('historical-help')}}</p>
+  }
+
   <app-reading-history-viewer
     [currentEntries]="currentEntries()"
     [isLoading]="isLoading()"
     [pagination]="pagination()"
     [currentPage]="currentPage()"
     [pageSize]="pageSize"
+    [allowReclassification]="memberInfo().id === accountService.currentUser()?.id"
+    (activityUpdated)="refreshActivity()"
     (pageChange)="onPageChange($event.page, $event.pageSize, $event.scroll)"
   />
 

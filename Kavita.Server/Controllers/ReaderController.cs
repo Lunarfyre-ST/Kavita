@@ -990,7 +990,6 @@ public class ReaderController(ICacheService cacheService,
     /// <returns></returns>
     [SeriesAccess]
     [HttpGet("time-left")]
-    [ResponseCache(CacheProfileName = ResponseCacheProfiles.Hour, VaryByQueryKeys = ["seriesId"])]
     public async Task<ActionResult<HourEstimateRangeDto>> GetEstimateToCompletion(int seriesId)
     {
         var ct = HttpContext.RequestAborted;
@@ -1013,7 +1012,7 @@ public class ReaderController(ICacheService cacheService,
         var progressPageCount = progress.Sum(p => p.PagesRead);
         var pagesLeft = series.Pages - progressPageCount;
 
-        return Ok(ReaderService.GetTimeEstimate(0, pagesLeft, false));
+        return Ok(ReaderService.GetTimeEstimate(0, pagesLeft, false, ReaderService.GetImageReadingSpeedMultiplier(series.ReadingStyle, series.ManhwaSpeedMultiplier)));
     }
 
 
@@ -1027,7 +1026,6 @@ public class ReaderController(ICacheService cacheService,
     [SeriesAccess]
     [ChapterAccess]
     [HttpGet("time-left-for-chapter")]
-    [ResponseCache(CacheProfileName = ResponseCacheProfiles.Hour, VaryByQueryKeys = ["seriesId", "chapterId"])]
     public async Task<ActionResult<HourEstimateRangeDto>> GetEstimateToCompletionForChapter(int seriesId, int chapterId)
     {
         var ct = HttpContext.RequestAborted;

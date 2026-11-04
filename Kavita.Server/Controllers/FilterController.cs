@@ -54,6 +54,24 @@ public class FilterController(
         }
     }
 
+    /// <summary>Create a series filter without replacing an existing filter with the same name.</summary>
+    [HttpPost("create/series")]
+    [DisallowRole(PolicyConstants.ReadOnlyRole)]
+    public async Task<ActionResult> CreateSeriesSmartFilter(SeriesFilterV2Dto dto)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(dto.Name)) return BadRequest("Name is required");
+            await ValidateAndSaveFilterUpsert(dto.Name, SmartFilterHelper.Encode(dto), dto.EntityType,
+                HttpContext.RequestAborted, createOnly: true);
+            return Ok();
+        }
+        catch (KavitaException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     /// <summary>
     /// Creates or Updates the Reading List filter
     /// </summary>
@@ -123,7 +141,7 @@ public class FilterController(
         }
     }
 
-    private async Task ValidateAndSaveFilterUpsert(string filterName, string encodedFilter,  FilterEntityType entityType, CancellationToken ct = default)
+    private async Task ValidateAndSaveFilterUpsert(string filterName, string encodedFilter,  FilterEntityType entityType, CancellationToken ct = default, bool createOnly = false)
     {
         var user = (await unitOfWork.UserRepository.GetUserByIdAsync(UserId, AppUserIncludes.SmartFilters, ct))!;
 
@@ -137,6 +155,7 @@ public class FilterController(
         var existingFilter = user.SmartFilters.FirstOrDefault(s => s.Name.Equals(filterName, StringComparison.InvariantCultureIgnoreCase));
         if (existingFilter != null)
         {
+            if (createOnly) throw new KavitaException("A smart filter with this name already exists");
             // Update the filter
             existingFilter.Filter = encodedFilter;
             unitOfWork.AppUserSmartFilterRepository.Update(existingFilter);

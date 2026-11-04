@@ -5,6 +5,7 @@ import {IHasReadingTime} from "./common/i-has-reading-time";
 import {IHasProgress} from "./common/i-has-progress";
 import {IHasMetadataIds} from "./common/i-has-metadata-ids";
 import {MetadataProvider} from "./kavitaplus/metadata-provider.enum";
+import {SeriesReadingStyle} from "./series-reading-style";
 
 export interface Series extends IHasCover, IHasReadingTime, IHasProgress, IHasMetadataIds {
   id: number;
@@ -43,6 +44,8 @@ export interface Series extends IHasCover, IHasReadingTime, IHasProgress, IHasMe
    * Format of the Series
    */
   format: MangaFormat;
+  readingStyle?: SeriesReadingStyle;
+  manhwaSpeedMultiplier?: number;
   /**
    * DateTime that represents last time the logged in user read this series
    */

@@ -23,6 +23,7 @@ using Kavita.Server.Extensions;
 using Kavita.Services.Scanner;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MimeTypes;
 
 namespace Kavita.Server.Controllers;
@@ -30,6 +31,7 @@ namespace Kavita.Server.Controllers;
 public class StatsController(
     IStatisticService statService,
     IUnitOfWork unitOfWork,
+    IDataContext context,
     IDirectoryService directoryService)
     : BaseApiController
 {
@@ -294,6 +296,25 @@ public class StatsController(
 
 
     #region Reading History
+
+    /// <summary>Reclassify the authenticated user's completed activity without changing reading progress.</summary>
+    [HttpPost("reading-history/historical")]
+    [DisallowRole(PolicyConstants.ReadOnlyRole)]
+    public async Task<ActionResult> UpdateHistoricalActivity(UpdateHistoricalActivityDto dto)
+    {
+        if (dto.ActivityIds == null) return BadRequest();
+        var ids = dto.ActivityIds.Distinct().ToList();
+        if (ids.Count == 0 || ids.Count > 1000 || ids.Any(id => id <= 0)) return BadRequest();
+
+        var activities = await context.AppUserReadingSessionActivityData
+            .Where(a => ids.Contains(a.Id) && a.ReadingSession.AppUserId == UserId && !a.ReadingSession.IsActive)
+            .ToListAsync(HttpContext.RequestAborted);
+        if (activities.Count != ids.Count) return NotFound();
+
+        foreach (var activity in activities) activity.IsHistorical = dto.IsHistorical;
+        await context.SaveChangesAsync(HttpContext.RequestAborted);
+        return Ok();
+    }
 
     [ProfilePrivacy]
     [HttpGet("reading-activity")]

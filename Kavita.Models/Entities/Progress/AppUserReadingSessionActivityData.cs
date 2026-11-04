@@ -30,6 +30,8 @@ public class AppUserReadingSessionActivityData
     public DateTime? EndTime { get; set; }
     public DateTime? EndTimeUtc { get; set; }
     public int PagesRead { get; set; }
+    /// <summary>Progress recorded for reading that happened before the displayed activity date.</summary>
+    public bool IsHistorical { get; set; }
     /// <summary>
     /// Only applicable for Book entries
     /// </summary>

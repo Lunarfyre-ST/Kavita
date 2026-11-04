@@ -494,6 +494,7 @@ Kavita.Server/cache/
 /Kavita.Server/temp/
 _temp/
 _output/
+/scripts/fork-build.local.json
 Kavita.Server/stats/
 UI/Web/dist/
 /Kavita.Services.Tests/Extensions/Test Data/modified on run.txt

@@ -62,6 +62,7 @@ public class WordCountAnalyzerService(
     private async Task ProcessSeries(Series series, bool forceUpdate)
     {
         var isEpub = series.Format == MangaFormat.Epub;
+        var speedMultiplier = ReaderService.GetImageReadingSpeedMultiplier(series.ReadingStyle, series.ManhwaSpeedMultiplier);
         var existingWordCount = series.WordCount;
         series.WordCount = 0;
         foreach (var volume in series.Volumes)
@@ -113,13 +114,13 @@ public class WordCountAnalyzerService(
                 volume.WordCount += chapter.WordCount;
                 series.WordCount += chapter.WordCount;
 
-                var est = ReaderService.GetTimeEstimate(chapter.WordCount, chapter.Pages, isEpub);
+                var est = ReaderService.GetTimeEstimate(chapter.WordCount, chapter.Pages, isEpub, speedMultiplier);
                 chapter.MinHoursToRead = est.MinHours;
                 chapter.MaxHoursToRead = est.MaxHours;
                 chapter.AvgHoursToRead = est.AvgHours;
             }
 
-            var volumeEst = ReaderService.GetTimeEstimate(volume.WordCount, volume.Pages, isEpub);
+            var volumeEst = ReaderService.GetTimeEstimate(volume.WordCount, volume.Pages, isEpub, speedMultiplier);
             volume.MinHoursToRead = volumeEst.MinHours;
             volume.MaxHoursToRead = volumeEst.MaxHours;
             volume.AvgHoursToRead = volumeEst.AvgHours;
@@ -128,7 +129,7 @@ public class WordCountAnalyzerService(
         }
 
         if (series.WordCount == 0 && existingWordCount != 0) series.WordCount = existingWordCount; // Restore original word count if the file hasn't changed
-        var seriesEstimate = ReaderService.GetTimeEstimate(series.WordCount, series.Pages, isEpub);
+        var seriesEstimate = ReaderService.GetTimeEstimate(series.WordCount, series.Pages, isEpub, speedMultiplier);
         series.MinHoursToRead = seriesEstimate.MinHours;
         series.MaxHoursToRead = seriesEstimate.MaxHours;
         series.AvgHoursToRead = seriesEstimate.AvgHours;

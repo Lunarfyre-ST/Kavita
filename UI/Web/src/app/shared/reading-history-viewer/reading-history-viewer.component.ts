@@ -5,13 +5,14 @@ import {
   inject,
   input,
   output,
+  signal,
   TemplateRef,
   viewChild
 } from '@angular/core';
 import {translate, TranslocoDirective} from "@jsverse/transloco";
 import {RouterLink} from "@angular/router";
 import {NgTemplateOutlet} from "@angular/common";
-import {NgbPagination, NgbTooltip} from "@ng-bootstrap/ng-bootstrap";
+import {NgbModalRef, NgbPagination, NgbTooltip} from "@ng-bootstrap/ng-bootstrap";
 import {ListSelectModalComponent} from "../_components/list-select-modal/list-select-modal.component";
 import {LoadingComponent} from "../loading/loading.component";
 import {MangaFormatPipe} from "../../_pipes/manga-format.pipe";
@@ -25,6 +26,9 @@ import {CompactNumberPipe} from "../../_pipes/compact-number.pipe";
 import {DurationPipe} from "../../_pipes/duration.pipe";
 import {ImageComponent} from "../image/image.component";
 import {UtcToLocalTimePipe} from "../../_pipes/utc-to-local-time.pipe";
+import {StatisticsService} from "../../_services/statistics.service";
+import {AccountService} from "../../_services/account.service";
+import {ToastrService} from "@openng/ngx-toastr";
 
 @Component({
   selector: 'app-reading-history-viewer',
@@ -51,6 +55,10 @@ export class ReadingHistoryViewerComponent {
 
   protected readonly imageService = inject(ImageService);
   private readonly modalService = inject(ModalService);
+  private readonly statisticsService = inject(StatisticsService);
+  protected readonly accountService = inject(AccountService);
+  private readonly toastr = inject(ToastrService);
+  private chapterModalRef?: NgbModalRef;
 
   chapterInfoRow = viewChild.required<TemplateRef<any>>('chapterInfoRow');
   readStatsTemplate = viewChild.required<TemplateRef<any>>('readStats');
@@ -60,11 +68,38 @@ export class ReadingHistoryViewerComponent {
   isLoading = input(false);
   currentPage = input.required<number>();
   pageSize = input.required<number>();
+  allowReclassification = input(false);
 
   pageChange = output<{page: number, pageSize: number, scroll: boolean}>();
+  activityUpdated = output<void>();
+  protected readonly updating = signal(false);
 
   protected readonly totalPages = computed(() => this.pagination()?.totalPages ?? 1);
   protected readonly totalItems = computed(() => this.pagination()?.totalItems ?? 0);
+
+  protected suggestReview(entry: ReadingHistoryItem): boolean {
+    if (entry.isHistorical) return false;
+    return entry.isGeneratedSession ||
+      (entry.pagesRead >= 500 && entry.durationSeconds < entry.pagesRead) ||
+      (entry.chapters.length >= 20 && entry.durationSeconds < 1800);
+  }
+
+  protected toggleHistorical(entry: ReadingHistoryItem, activityIds: number[] = entry.sessionDataIds): void {
+    if (this.updating() || !this.allowReclassification() || this.accountService.hasReadOnlyRole()) return;
+    this.updating.set(true);
+    this.statisticsService.setHistoricalActivity(activityIds, !entry.isHistorical).subscribe({
+      next: () => {
+        this.updating.set(false);
+        this.chapterModalRef?.close();
+        this.chapterModalRef = undefined;
+        this.activityUpdated.emit();
+      },
+      error: () => {
+        this.updating.set(false);
+        this.toastr.error(translate('profile-activity.reclassify-error'));
+      }
+    });
+  }
 
   /**
    * Returns relative date string for today/yesterday, otherwise formatted date
@@ -98,6 +133,9 @@ export class ReadingHistoryViewerComponent {
       size: 'lg',
       centered: true
     });
+    this.chapterModalRef = ref;
+    ref.closed.subscribe(() => this.chapterModalRef = undefined);
+    ref.dismissed.subscribe(() => this.chapterModalRef = undefined);
 
     ref.setInput('title', item.seriesName);
     ref.setInput('showConfirm', false);

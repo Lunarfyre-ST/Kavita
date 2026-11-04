@@ -23,6 +23,31 @@ namespace Kavita.Services.Tests;
 
 public class WordCountAnalysisTests(ITestOutputHelper outputHelper): AbstractDbTest(outputHelper)
 {
+    [Fact]
+    public async Task ManhwaSeriesUsesItsOwnSpeedWhenRecalculatingChapterEstimates()
+    {
+        var (unitOfWork, context, _) = await CreateDatabase();
+        var chapter = new ChapterBuilder("1").WithPages(300).Build();
+        var series = new SeriesBuilder("Scrolling series")
+            .WithFormat(MangaFormat.Archive)
+            .WithVolume(new VolumeBuilder("1").WithChapter(chapter).Build())
+            .Build();
+        series.ReadingStyle = SeriesReadingStyle.Manhwa;
+        series.ManhwaSpeedMultiplier = 2f;
+        context.Library.Add(new LibraryBuilder("Scrolling library").WithSeries(series).Build());
+        await context.SaveChangesAsync();
+        var service = new WordCountAnalyzerService(Substitute.For<ILogger<WordCountAnalyzerService>>(), unitOfWork,
+            Substitute.For<IEventHub>(), Substitute.For<IMediaErrorService>(),
+            new DirectoryService(Substitute.For<ILogger<DirectoryService>>(), new MockFileSystem()));
+
+        await service.ScanSeries(series.LibraryId, series.Id, forceUpdate: false);
+        var chapterAfterScan = await context.Chapter.AsNoTracking().SingleAsync(c => c.Id == chapter.Id);
+        Assert.Equal(ReaderService.GetTimeEstimate(0, 300, false, 2f).AvgHours, chapterAfterScan.AvgHoursToRead);
+        var dto = await unitOfWork.SeriesRepository.GetSeriesDtoByIdAsync(series.Id, 0);
+        Assert.NotNull(dto);
+        Assert.Equal(SeriesReadingStyle.Manhwa, dto.ReadingStyle);
+        Assert.Equal(2f, dto.ManhwaSpeedMultiplier);
+    }
     private readonly string _testDirectory = Path.Join(Directory.GetCurrentDirectory(), "../../../Test Data/BookService");
     private const long WordCount = 33608; // 37417 if splitting on space, 33608 if just character count
     private const long MinHoursToRead = 1;

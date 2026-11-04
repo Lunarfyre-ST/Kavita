@@ -182,6 +182,16 @@ public class SeriesController(
         if (series == null)
             return BadRequest(await localizationService.TranslateAsync(UserId, "series-doesnt-exist"));
 
+        if (updateSeries.ReadingStyle.HasValue && !Enum.IsDefined(updateSeries.ReadingStyle.Value)) return BadRequest("Invalid reading style");
+        if (updateSeries.ManhwaSpeedMultiplier.HasValue &&
+            (!float.IsFinite(updateSeries.ManhwaSpeedMultiplier.Value) || updateSeries.ManhwaSpeedMultiplier.Value < 1f || updateSeries.ManhwaSpeedMultiplier.Value > 10f))
+            return BadRequest("Manhwa speed multiplier must be between 1 and 10");
+
+        var estimateChanged = (updateSeries.ReadingStyle.HasValue && series.ReadingStyle != updateSeries.ReadingStyle.Value) ||
+            (updateSeries.ManhwaSpeedMultiplier.HasValue && series.ManhwaSpeedMultiplier != updateSeries.ManhwaSpeedMultiplier.Value);
+        if (updateSeries.ReadingStyle.HasValue) series.ReadingStyle = updateSeries.ReadingStyle.Value;
+        if (updateSeries.ManhwaSpeedMultiplier.HasValue) series.ManhwaSpeedMultiplier = updateSeries.ManhwaSpeedMultiplier.Value;
+
         var renamed = false;
         var newName = updateSeries.Name?.Trim();
         if (!string.IsNullOrEmpty(newName) && newName != series.Name)
@@ -277,6 +287,8 @@ public class SeriesController(
         {
             return BadRequest(await localizationService.TranslateAsync(UserId, "generic-series-update"));
         }
+
+        if (estimateChanged) taskScheduler.AnalyzeFilesForSeries(series.LibraryId, series.Id);
 
         // Pulls a fresh Series, must be after commit
         await externalMetadataService.UpdateSeriesMetadataProviderOverride(series.Id, updateSeries.MetadataProviderOverride, ct);

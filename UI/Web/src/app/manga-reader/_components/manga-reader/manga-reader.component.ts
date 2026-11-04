@@ -98,6 +98,8 @@ import {
   SettingSelectComponent
 } from "../../../settings/_components/setting-enum-select/setting-select.component";
 import {PublicationStatus} from "../../../_models/metadata/publication-status";
+import {initialSeriesReaderMode, readerModeForProfile, SeriesReadingStyle} from "../../../_models/series-reading-style";
+import {Series} from "../../../_models/series";
 
 
 const PREFETCH_PAGES = 10;
@@ -231,6 +233,7 @@ export class MangaReaderComponent implements OnInit, AfterViewInit, OnDestroy {
 
   libraryId!: number;
   seriesId!: number;
+  private seriesReadingStyle = SeriesReadingStyle.FollowProfile;
   volumeId!: number;
   chapterId = signal<number>(0);
   chapterInfo = signal<ChapterInfo | null>(null);
@@ -766,6 +769,8 @@ export class MangaReaderComponent implements OnInit, AfterViewInit, OnDestroy {
         this.router.navigateByUrl('/home');
         return;
       }
+      const series = data['readerSeries'] as Series;
+      this.seriesReadingStyle = series?.readingStyle ?? SeriesReadingStyle.FollowProfile;
       const readingProfile = data['readingProfile'] as ReadingProfile;
       this.readingProfile.set(readingProfile);
       this.formModel.set(toFormModel(readingProfile, this.mangaReaderService));
@@ -895,7 +900,7 @@ export class MangaReaderComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.readingDirection.set(readingProfile.readingDirection);
-    this.readerMode.set(readingProfile.readerMode);
+    this.readerMode.set(initialSeriesReaderMode(this.seriesReadingStyle, readingProfile.readerMode));
     this.backgroundColor.set(readingProfile.backgroundColor || '#000000');
     this.readerService.setOverrideStyles(this.backgroundColor());
 
@@ -1022,6 +1027,7 @@ export class MangaReaderComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   switchToWebtoonReaderIfPagesLikelyWebtoon() {
+    if (this.seriesReadingStyle !== SeriesReadingStyle.FollowProfile) return;
     if (this.isReaderModeWebtoon()) return;
     if (!this.readingProfile()!.allowAutomaticWebtoonReaderDetection) return;
 
@@ -2049,7 +2055,8 @@ export class MangaReaderComponent implements OnInit, AfterViewInit, OnDestroy {
     const data = {...profile};
 
     data.layoutMode = modelSettings.layoutMode;
-    data.readerMode = this.readerMode();
+    // A series-level starting layout is a runtime override, not a change to the saved profile.
+    data.readerMode = readerModeForProfile(this.seriesReadingStyle, this.readerMode(), profile.readerMode);
     data.autoCloseMenu = modelSettings.autoCloseMenu;
     data.readingDirection = this.readingDirection();
     data.emulateBook = modelSettings.emulateBook;

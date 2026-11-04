@@ -28,7 +28,8 @@ public static class ActivityFilter
         AppUserSocialPreferences  socialPreferences,
         AppUser requestingUser,
         bool onlyCompleted = true,
-        bool isAggregate = false
+        bool isAggregate = false,
+        bool includeHistorical = false
         )
     {
         var startTime = filter.StartDate?.ToUniversalTime();
@@ -42,6 +43,7 @@ public static class ActivityFilter
 
         queryable = queryable
             .Where(d => filter.Libraries.Contains(d.LibraryId) && d.ReadingSession.AppUserId == userId)
+            .WhereIf(!includeHistorical, d => !d.IsHistorical)
             .WhereIf(onlyCompleted, d => d.EndPage >= d.Chapter.Pages)
             .WhereIf(startTime != null, d => d.StartTimeUtc >= startTime)
             .WhereIf(endTime != null, d => d.EndTimeUtc <= endTime);

@@ -46,10 +46,10 @@
 
                 @for (week of weeks(); track $index) {
                   @let day = week.days[dayIndex];
-                  @if (day && day.totalTimeReadingSeconds > 0) {
+                  @if (day && (day.totalTimeReadingSeconds > 0 || day.totalPages > 0 || day.totalWords > 0 || day.totalChaptersFullyRead > 0)) {
                     <td class="activity-cell"
                         [class]="getLevelClass(day.level)"
-                        [ngClass]="{'today': isToday(day)}"
+                        [ngClass]="{'today': isToday(day), 'review-suggested': suggestReview(day)}"
                         [attr.aria-describedby]="'activity-level-' + day.level"
                         [ngbTooltip]="tooltip"
                         container="body"
@@ -91,6 +91,7 @@
           </div>
           <span class="legend-label">{{ t('more') }}</span>
         </div>
+        <p class="small text-muted mt-2">{{t('review-legend')}}</p>
       </div>
 
       <ng-template #noActivityTooltip let-item="item">
@@ -121,6 +122,9 @@
               <i class="fa fa-book-open" aria-hidden="true"></i>
               <span>{{ t('chapters') }}: {{ item.totalChaptersFullyRead }}</span>
             </div>
+            @if (suggestReview(item)) {
+              <div class="tooltip-stat">{{t('review-suggested')}}</div>
+            }
           </div>
         </div>
       </ng-template>
