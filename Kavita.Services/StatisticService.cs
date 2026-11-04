@@ -719,6 +719,23 @@ public class StatisticService(ILogger<StatisticService> logger, IDataContext con
         return result;
     }
 
+    public async Task<IList<int>> GetReadingActivityYears(StatsFilterDto filter, int userId, int requestingUserId, CancellationToken ct = default)
+    {
+        var socialPreferences = await unitOfWork.UserRepository.GetSocialPreferencesForUser(userId, ct);
+        var requestingUser = await unitOfWork.UserRepository.GetUserByIdAsync(requestingUserId, ct: ct);
+        if (requestingUser == null) return Array.Empty<int>();
+
+        var dates = await context.AppUserReadingSessionActivityData
+            .ApplyStatsFilter(filter, userId, socialPreferences, requestingUser, false, true)
+            .Where(a => a.ReadingSession.EndTimeUtc != null)
+            .Select(a => a.ReadingSession.StartTimeUtc)
+            .Distinct()
+            .ToListAsync(ct);
+        var timezone = GetTimeZoneOrUtc(filter.TimeZoneId);
+        return dates.Select(date => TimeZoneInfo.ConvertTimeFromUtc(date, timezone).Year)
+            .Distinct().OrderByDescending(year => year).ToList();
+    }
+
     public async Task<ReadingActivityGraphDto> GetReadingActivityGraphData(StatsFilterDto filter, int userId, int year,
         int requestingUserId, CancellationToken ct = default)
     {

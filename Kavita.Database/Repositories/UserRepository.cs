@@ -458,7 +458,8 @@ public class UserRepository(DataContext context, UserManager<AppUser> userManage
                 ExternalSourceId = d.ExternalSourceId ?? 0,
                 StreamType = d.StreamType,
                 Order = d.Order,
-                Visible = d.Visible
+                Visible = d.Visible,
+                Icon = d.Icon
             })
             .AsSplitQuery()
             .ToListAsync(ct);

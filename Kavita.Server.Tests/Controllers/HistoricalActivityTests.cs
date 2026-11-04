@@ -28,6 +28,54 @@ namespace Kavita.Server.Tests.Controllers;
 public class HistoricalActivityTests(ITestOutputHelper output) : AbstractDbTest(output)
 {
     [Fact]
+    public async Task ActivityYearsIncludeOlderSessionsAndRespectFiltersAndHistoricalEntries()
+    {
+        var (_, context, mapper) = await CreateDatabase();
+        var library = await context.Library.Includes(LibraryIncludes.Series).FirstAsync();
+        library.Series.Add(new SeriesBuilder("Example").WithVolume(new VolumeBuilder("1")
+            .WithChapter(new ChapterBuilder("1").WithPages(10).Build()).Build()).Build());
+        var owner = new AppUser { UserName = "years-owner" };
+        context.AppUser.Add(owner);
+        await context.SaveChangesAsync();
+        var chapter = await context.Chapter.FirstAsync();
+        void AddSession(DateTime start, bool historical = false)
+        {
+            context.AppUserReadingSession.Add(new AppUserReadingSession
+            {
+                AppUserId = owner.Id, IsActive = false, StartTimeUtc = start, EndTimeUtc = start.AddMinutes(1),
+                ActivityData = [new AppUserReadingSessionActivityData
+                {
+                    ChapterId = chapter.Id, VolumeId = chapter.VolumeId, SeriesId = library.Series.First().Id,
+                    LibraryId = library.Id, PagesRead = 10, StartPage = 0, EndPage = 10, TotalPages = 10,
+                    Format = MangaFormat.Archive, StartTimeUtc = start, EndTimeUtc = start.AddMinutes(1),
+                    IsHistorical = historical
+                }]
+            });
+        }
+        AddSession(new DateTime(2024, 6, 1, 12, 0, 0, DateTimeKind.Utc));
+        AddSession(new DateTime(2025, 6, 1, 12, 0, 0, DateTimeKind.Utc));
+        AddSession(new DateTime(2022, 12, 31, 23, 30, 0, DateTimeKind.Utc));
+        AddSession(new DateTime(2023, 6, 1, 12, 0, 0, DateTimeKind.Utc), historical: true);
+        await context.SaveChangesAsync();
+        var users = Substitute.For<IUserRepository>();
+        users.GetUserByIdAsync(owner.Id, Arg.Any<AppUserIncludes>(), Arg.Any<CancellationToken>()).Returns(owner);
+        users.GetSocialPreferencesForUser(owner.Id, Arg.Any<CancellationToken>()).Returns(new AppUserSocialPreferences());
+        var uow = Substitute.For<IUnitOfWork>();
+        uow.UserRepository.Returns(users);
+        var stats = new StatisticService(NullLogger<StatisticService>.Instance, context, mapper, uow,
+            Substitute.For<IEntityNamingService>(), Substitute.For<ILocalizationService>());
+        var filter = new StatsFilterDto { Libraries = [library.Id], TimeZoneId = "UTC" };
+        Assert.Equal(new[] {2025, 2024, 2022}, await stats.GetReadingActivityYears(filter, owner.Id, owner.Id));
+        filter.TimeZoneId = "Europe/Helsinki";
+        Assert.Equal(new[] {2025, 2024, 2023}, await stats.GetReadingActivityYears(filter, owner.Id, owner.Id));
+        filter.TimeZoneId = "UTC";
+        filter.StartDate = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        Assert.Equal(new[] {2025}, await stats.GetReadingActivityYears(filter, owner.Id, owner.Id));
+        filter.Libraries = [];
+        Assert.Empty(await stats.GetReadingActivityYears(filter, owner.Id, owner.Id));
+    }
+
+    [Fact]
     public async Task ReclassificationIsReversibleAndPreservesProgressAndOtherActivity()
     {
         var (_, context, mapper) = await CreateDatabase();

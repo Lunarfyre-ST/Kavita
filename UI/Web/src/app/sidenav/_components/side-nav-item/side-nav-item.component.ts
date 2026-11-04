@@ -33,6 +33,7 @@ export class SideNavItemComponent {
    * Icon to display next to item. ie) 'fa-home'
    */
   icon = input<string>('');
+  emoji = input<string | null | undefined>(null);
   imageUrl = input<string | null>(null);
   /**
    * Removes all the space around the icon area

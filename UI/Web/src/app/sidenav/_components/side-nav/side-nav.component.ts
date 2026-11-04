@@ -1,6 +1,6 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, effect, inject, signal} from '@angular/core';
 import {NavigationEnd, Router} from '@angular/router';
-import {NgbTooltip} from '@ng-bootstrap/ng-bootstrap';
+import {NgbDropdownModule, NgbTooltip} from '@ng-bootstrap/ng-bootstrap';
 import {distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
 import {UtilityService} from '../../../shared/_services/utility.service';
 import {Library, LibraryType} from '../../../_models/library/library';
@@ -9,7 +9,7 @@ import {ActionFactoryService} from '../../../_services/action-factory.service';
 import {NavService} from '../../../_services/nav.service';
 import {takeUntilDestroyed, toObservable} from "@angular/core/rxjs-interop";
 import {BehaviorSubject, merge, Observable, of, ReplaySubject, startWith, switchMap} from "rxjs";
-import {AsyncPipe} from "@angular/common";
+import {AsyncPipe, NgTemplateOutlet} from "@angular/common";
 import {SideNavItemComponent} from "../side-nav-item/side-nav-item.component";
 import {FilterPipe} from "../../../_pipes/filter.pipe";
 import {translate, TranslocoDirective} from "@jsverse/transloco";
@@ -36,7 +36,7 @@ import {ImageService} from "../../../_services/image.service";
 @Component({
   selector: 'app-side-nav',
   imports: [SideNavItemComponent, CardActionablesComponent, FilterPipe, TranslocoDirective, NgbTooltip,
-    AsyncPipe, CdkDropList, CdkDrag, FilterFieldComponent],
+    AsyncPipe, NgTemplateOutlet, CdkDropList, CdkDrag, FilterFieldComponent, NgbDropdownModule],
   templateUrl: './side-nav.component.html',
   styleUrls: ['./side-nav.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -216,6 +216,18 @@ export class SideNavComponent {
 
   getSmartFilterBaseLink(item: SideNavStream) {
     return '/' + FilterUtilitiesService.getFilterLink(item.entityType, '');
+  }
+
+  updateCustomSidebar(stream: SideNavStream, icon: string | null, visible = true) {
+    if (this.accountService.hasReadOnlyRole()) return;
+    this.navService.updateSideNavStream({...stream, icon: icon ?? '', visible}).subscribe({
+      next: () => {
+        this.cachedData = null;
+        this.loadDataSubject.next();
+        this.toastr.success(translate(visible ? 'side-nav.custom-saved' : 'side-nav.custom-hidden'));
+      },
+      error: () => this.toastr.error(translate('errors.generic'))
+    });
   }
 
   async reorderDrop($event: CdkDragDrop<any, any, SideNavStream>) {

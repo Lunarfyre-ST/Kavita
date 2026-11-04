@@ -37,6 +37,7 @@ public interface IStatisticService
     Task<DeviceClientBreakdownDto> GetClientTypeBreakdown(DateTime fromDateUtc, CancellationToken ct = default);
     Task<IList<StatCount<string>>> GetDeviceTypeCounts(DateTime fromDateUtc, CancellationToken ct = default);
     Task<ReadingActivityGraphDto> GetReadingActivityGraphData(StatsFilterDto filter, int userId, int year, int requestingUserId, CancellationToken ct = default);
+    Task<IList<int>> GetReadingActivityYears(StatsFilterDto filter, int userId, int requestingUserId, CancellationToken ct = default);
     Task<ReadingPaceDto> GetReadingPaceForUser(StatsFilterDto filter, int userId, int year, bool booksOnly, int requestingUserId, CancellationToken ct = default);
     Task<BreakDownDto<string>> GetGenreBreakdownForUser(StatsFilterDto filter, int userId, int requestingUserId, CancellationToken ct = default);
     Task<BreakDownDto<string>> GetTagBreakdownForUser(StatsFilterDto filter, int userId, int requestingUserId, CancellationToken ct = default);

@@ -34,6 +34,8 @@ public sealed record SideNavStreamDto
     [EnumDataType(typeof(SideNavStreamType))]
     public SideNavStreamType StreamType { get; set; }
     public bool Visible { get; set; }
+    [StringLength(32)]
+    public string? Icon { get; set; }
     public int? LibraryId { get; set; }
     /// <summary>
     /// Only available for SideNavStreamType.Library

@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, inject, input, signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, inject, input, signal} from '@angular/core';
 import {ActivityGraphComponent} from "../../../statistics/_components/activity-graph/activity-graph.component";
 import {
   AvgTimeSpendReadingByHourComponent
@@ -48,6 +48,11 @@ export class ProfileStatsComponent {
 
   protected filter = signal<StatsFilter | undefined>(undefined);
   protected year = signal<number>(new Date().getFullYear());
+  protected readonly activityYears = this.statsService.getReadingActivityYearsResource(() => this.filter(), () => this.userId());
+  protected readonly graphYears = computed(() => {
+    const years = this.activityYears.hasValue() ? this.activityYears.value() : [];
+    return years.length ? years : [this.year()];
+  });
 
   protected readonly genreBreakdown = this.statsService.getGenreBreakDownResource(() => this.filter(), () => this.userId());
   protected readonly tagsBreakdown = this.statsService.getTagBreakDownResource(() => this.filter(), () => this.userId());

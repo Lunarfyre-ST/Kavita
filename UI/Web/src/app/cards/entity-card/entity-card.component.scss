@@ -359,7 +359,8 @@
   position: absolute;
   top: 0.3125rem;
   left: 0.3125rem;
-  visibility: hidden;
+  visibility: visible;
+  z-index: 110;
 
   &.always-show {
     visibility: visible !important;

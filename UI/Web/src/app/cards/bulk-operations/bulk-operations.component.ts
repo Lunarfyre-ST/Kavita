@@ -39,6 +39,7 @@ export class BulkOperationsComponent<T> {
   actions = computed(() => this.bulkSelectionService.actionsSignal() ?? []);
   hasMarkAsRead = computed(() => this.actionFactoryService.hasAction(this.actions(), Action.MarkAsRead));
   hasMarkAsUnread = computed(() => this.actionFactoryService.hasAction(this.actions(), Action.MarkAsUnread));
+  hasAddToCollection = computed(() => this.actionFactoryService.hasAction(this.actions(), Action.AddToCollection));
 
 
   @HostListener('document:keydown.shift', ['$event'])

@@ -12,6 +12,7 @@ export interface SideNavStream extends CommonStream {
   streamType: SideNavStreamType;
   library?: Library;
   visible: boolean;
+  icon?: string | null;
   smartFilterId: number;
   smartFilterEncoded?: string;
   externalSource?: ExternalSource;

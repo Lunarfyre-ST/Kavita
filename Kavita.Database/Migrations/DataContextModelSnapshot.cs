@@ -3497,6 +3497,9 @@ namespace Kavita.Database.Migrations
                     b.Property<int?>("ExternalSourceId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Icon")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsProvided")
                         .HasColumnType("INTEGER");
 

@@ -262,6 +262,7 @@ public class StreamService(
             throw new UnauthorizedAccessException();
 
         stream.Visible = dto.Visible;
+        if (dto.Icon != null) stream.Icon = string.IsNullOrWhiteSpace(dto.Icon) ? null : dto.Icon.Trim();
 
         unitOfWork.UserRepository.Update(stream);
         await unitOfWork.CommitAsync(ct);

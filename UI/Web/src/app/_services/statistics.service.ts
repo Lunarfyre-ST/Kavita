@@ -191,6 +191,14 @@ export class StatisticsService {
     return this.httpClient.get<Array<StatCount<DayOfWeek>>>(this.baseUrl + 'stats/day-breakdown?userId=' + userId);
   }
 
+  getReadingActivityYearsResource(statsFilter: () => (StatsFilter | undefined), userId: () => number) {
+    return httpResource<number[]>(() => {
+      const filter = statsFilter();
+      if (!filter) return undefined;
+      return {url: this.baseUrl + 'stats/reading-activity-years', params: this.filterHttpParams(filter, userId())};
+    }).asReadonly();
+  }
+
   getReadingActivityResource(statsFilter: () => (StatsFilter | undefined), userId: () => number, year: () => number) {
     return httpResource<ActivityGraphData>(() => {
       const filter = statsFilter();

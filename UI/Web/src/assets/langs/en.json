@@ -1965,6 +1965,15 @@
     },
 
     "side-nav": {
+        "custom-actions": "Options for {{name}}",
+        "custom-icon": "Sidebar icon",
+        "custom-icon-placeholder": "Type or paste an emoji",
+        "custom-icon-save": "Save",
+        "custom-icon-choose": "Use {{icon}}",
+        "custom-icon-reset": "Use default icon",
+        "custom-remove": "Remove from sidebar",
+        "custom-saved": "Sidebar entry updated",
+        "custom-hidden": "Removed from sidebar. Restore it in sidebar customization.",
         "home": "Home",
         "want-to-read": "Want To Read",
         "collections": "Collections",
@@ -2164,6 +2173,7 @@
     },
 
     "bulk-operations": {
+        "add-to-collection": "Add to Collection",
         "title": "Bulk Actions",
         "items-selected": "{{num}} items selected",
         "mark-as-unread": "Mark as Unread",
@@ -4039,6 +4049,8 @@
     },
 
     "profile": {
+        "activity-years-loading": "Loading reading activity...",
+        "activity-years-error": "Could not load reading activity. Please refresh and try again.",
         "title": "{{username}}'s Profile",
         "joined-label": "Joined:",
         "last-read-label": "Last Read:",

@@ -13,7 +13,15 @@
 
     <div class="row mt-4">
       <div class="col-md-12">
-        <app-activity-graph [userId]="userId()" [year]="year()" [filter]="filterValue" />
+        @if (activityYears.isLoading()) {
+          <p>{{t('activity-years-loading')}}</p>
+        } @else if (activityYears.error()) {
+          <p role="alert">{{t('activity-years-error')}}</p>
+        } @else {
+          @for (graphYear of graphYears(); track graphYear) {
+            <app-activity-graph [userId]="userId()" [year]="graphYear" [filter]="filterValue" />
+          }
+        }
       </div>
     </div>
 

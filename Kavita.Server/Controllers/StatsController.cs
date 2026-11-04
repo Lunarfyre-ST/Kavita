@@ -317,6 +317,15 @@ public class StatsController(
     }
 
     [ProfilePrivacy]
+    [HttpGet("reading-activity-years")]
+    public async Task<ActionResult<IList<int>>> GetReadingActivityYears([FromQuery] StatsFilterDto filter, int userId)
+    {
+        var ct = HttpContext.RequestAborted;
+        await CleanStatsFilter(filter, UserId);
+        return Ok(await statService.GetReadingActivityYears(filter, userId, UserId, ct));
+    }
+
+    [ProfilePrivacy]
     [HttpGet("reading-activity")]
     public async Task<ActionResult<ReadingActivityGraphDto>> GetReadingActivity([FromQuery] StatsFilterDto filter, int userId, int year)
     {

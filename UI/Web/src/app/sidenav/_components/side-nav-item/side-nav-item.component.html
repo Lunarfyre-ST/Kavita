@@ -39,7 +39,9 @@
       <span class="phone-hidden" title="{{title()}}">
         <div>
           @let imageUrlValue = imageUrl();
-          @if (imageUrlValue) {
+          @if (emoji()) {
+            <span aria-hidden="true">{{emoji()}}</span>
+          } @else if (imageUrlValue) {
             <app-image [imageUrl]="imageUrlValue" width="20px" height="20px" />
           } @else {
             <i class="fa {{icon()}}" aria-hidden="true"></i>

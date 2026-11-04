@@ -25,6 +25,7 @@ public class AppUserSideNavStream
     /// </summary>
     public SideNavStreamType StreamType { get; set; }
     public bool Visible { get; set; }
+    public string? Icon { get; set; }
     /// <summary>
     /// If Not IsProvided, the appropriate smart filter
     /// </summary>

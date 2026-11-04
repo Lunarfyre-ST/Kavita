@@ -41,59 +41,76 @@
                                    [cdkDragDisabled]="!editMode" [cdkDragData]="navStream" [editMode]="editMode"
                                    [link]="'/library/' + navStream.libraryId + '/'"
                                    [icon]="getLibraryTypeIcon(navStream.library!.type)"
+                                   [emoji]="navStream.icon"
                                    [imageUrl]="getLibraryImage(navStream.library!)" [title]="navStream.library!.name"
                                    [comparisonMethod]="'startsWith'">
                   <ng-container actions>
                     <app-card-actionables [entity]="navStream.library" [actions]="actions" [labelBy]="navStream.name" iconClass="fa-ellipsis-v" />
+                    <ng-container [ngTemplateOutlet]="sidebarOptions" [ngTemplateOutletContext]="{$implicit: navStream}" />
                   </ng-container>
                 </app-side-nav-item>
               }
 
               @case (SideNavStreamType.AllSeries) {
                 <app-side-nav-item cdkDrag cdkDragBoundary=".side-nav-container" cdkDragPreviewContainer="parent"
-                                   [cdkDragDisabled]="!editMode" [cdkDragData]="navStream" [editMode]="editMode" icon="fa-regular fa-rectangle-list" [title]="t('all-series')" link="/all-series/" />
+                                   [cdkDragDisabled]="!editMode" [cdkDragData]="navStream" [editMode]="editMode" icon="fa-regular fa-rectangle-list" [emoji]="navStream.icon" [title]="t('all-series')" link="/all-series/">
+                  <ng-container actions><ng-container [ngTemplateOutlet]="sidebarOptions" [ngTemplateOutletContext]="{$implicit: navStream}" /></ng-container>
+                </app-side-nav-item>
               }
 
               @case (SideNavStreamType.Bookmarks) {
                 <app-side-nav-item cdkDrag cdkDragBoundary=".side-nav-container" cdkDragPreviewContainer="parent" [cdkDragDisabled]="!editMode"
-                                   [cdkDragData]="navStream" [editMode]="editMode" icon="fa-bookmark" [title]="t('bookmarks')" link="/bookmarks/" />
+                                   [cdkDragData]="navStream" [editMode]="editMode" icon="fa-bookmark" [emoji]="navStream.icon" [title]="t('bookmarks')" link="/bookmarks/">
+                  <ng-container actions><ng-container [ngTemplateOutlet]="sidebarOptions" [ngTemplateOutletContext]="{$implicit: navStream}" /></ng-container>
+                </app-side-nav-item>
               }
 
               @case (SideNavStreamType.ReadingLists) {
                 <app-side-nav-item cdkDrag cdkDragBoundary=".side-nav-container" cdkDragPreviewContainer="parent"
                                    [cdkDragDisabled]="!editMode" [cdkDragData]="navStream" [editMode]="editMode"
-                                   icon="fa-list-ol" [title]="t('reading-lists')" link="/lists/">
+                                   icon="fa-list-ol" [emoji]="navStream.icon" [title]="t('reading-lists')" link="/lists/">
                   <ng-container actions>
                     <app-card-actionables [actions]="readingListActions" labelBy="reading-lists" iconClass="fa-ellipsis-v" (actionHandler)="performReadingListAction($event)" />
+                    <ng-container [ngTemplateOutlet]="sidebarOptions" [ngTemplateOutletContext]="{$implicit: navStream}" />
                   </ng-container>
                 </app-side-nav-item>
               }
 
               @case (SideNavStreamType.Collections) {
                 <app-side-nav-item cdkDrag cdkDragBoundary=".side-nav-container" cdkDragPreviewContainer="parent"
-                                   [cdkDragDisabled]="!editMode" [cdkDragData]="navStream" [editMode]="editMode" icon="fa-list" [title]="t('collections')" link="/collections/" />
+                                   [cdkDragDisabled]="!editMode" [cdkDragData]="navStream" [editMode]="editMode" icon="fa-list" [emoji]="navStream.icon" [title]="t('collections')" link="/collections/">
+                  <ng-container actions><ng-container [ngTemplateOutlet]="sidebarOptions" [ngTemplateOutletContext]="{$implicit: navStream}" /></ng-container>
+                </app-side-nav-item>
               }
 
               @case (SideNavStreamType.WantToRead) {
                 <app-side-nav-item cdkDrag cdkDragBoundary=".side-nav-container" cdkDragPreviewContainer="parent"
-                                   [cdkDragDisabled]="!editMode" [cdkDragData]="navStream" [editMode]="editMode" icon="fa-star" [title]="t('want-to-read')" link="/want-to-read/" />
+                                   [cdkDragDisabled]="!editMode" [cdkDragData]="navStream" [editMode]="editMode" icon="fa-star" [emoji]="navStream.icon" [title]="t('want-to-read')" link="/want-to-read/">
+                  <ng-container actions><ng-container [ngTemplateOutlet]="sidebarOptions" [ngTemplateOutletContext]="{$implicit: navStream}" /></ng-container>
+                </app-side-nav-item>
               }
 
               @case (SideNavStreamType.BrowseAuthors) {
                 <app-side-nav-item cdkDrag cdkDragBoundary=".side-nav-container" cdkDragPreviewContainer="parent"
-                                   [cdkDragDisabled]="!editMode" [cdkDragData]="navStream" [editMode]="editMode" icon="fa-users" [title]="t('browse-people')" link="/browse/people/" />
+                                   [cdkDragDisabled]="!editMode" [cdkDragData]="navStream" [editMode]="editMode" icon="fa-users" [emoji]="navStream.icon" [title]="t('browse-people')" link="/browse/people/">
+                  <ng-container actions><ng-container [ngTemplateOutlet]="sidebarOptions" [ngTemplateOutletContext]="{$implicit: navStream}" /></ng-container>
+                </app-side-nav-item>
               }
 
               @case (SideNavStreamType.SmartFilter) {
                 <app-side-nav-item cdkDrag cdkDragBoundary=".side-nav-container" cdkDragPreviewContainer="parent"
-                                   [cdkDragDisabled]="!editMode" [cdkDragData]="navStream" [editMode]="editMode" icon="fa-bars-staggered" [title]="navStream.name" [link]="getSmartFilterBaseLink(navStream)" [queryParams]="navStream.smartFilterEncoded" />
+                                   [cdkDragDisabled]="!editMode" [cdkDragData]="navStream" [editMode]="editMode" icon="fa-bars-staggered" [emoji]="navStream.icon" [title]="navStream.name" [link]="getSmartFilterBaseLink(navStream)" [queryParams]="navStream.smartFilterEncoded">
+                  <ng-container actions><ng-container [ngTemplateOutlet]="sidebarOptions" [ngTemplateOutletContext]="{$implicit: navStream}" /></ng-container>
+                </app-side-nav-item>
               }
 
               @case (SideNavStreamType.ExternalSource) {
-                <app-side-nav-item [editMode]="editMode" icon="fa-server"
+                <app-side-nav-item [editMode]="editMode" icon="fa-server" [emoji]="navStream.icon"
                                    cdkDrag cdkDragBoundary=".side-nav-container" cdkDragPreviewContainer="parent"
                                    [title]="navStream.name" [link]="navStream.externalSource.host + 'login' + (!!navStream.externalSource.apiKey ? '?apiKey=' + navStream.externalSource.apiKey : '')"
-                                   [external]="true" />
+                                   [external]="true">
+                  <ng-container actions><ng-container [ngTemplateOutlet]="sidebarOptions" [ngTemplateOutletContext]="{$implicit: navStream}" /></ng-container>
+                </app-side-nav-item>
               }
 
             }
@@ -119,5 +136,31 @@
                         [external]="true" />
     }
   </div>
+
+  <ng-template #sidebarOptions let-stream>
+    @if (!isReadOnly()) {
+      <div ngbDropdown container="body" [autoClose]="'outside'" (click)="$event.preventDefault(); $event.stopPropagation()">
+        <button type="button" class="btn btn-icon" ngbDropdownToggle [attr.aria-label]="t('custom-actions', {name: stream.name})">
+          <i [class]="stream.streamType === SideNavStreamType.SmartFilter ? 'fa fa-ellipsis-v' : 'fa fa-palette'" aria-hidden="true"></i>
+        </button>
+        <div ngbDropdownMenu class="p-2 custom-sidebar-menu">
+          <label class="form-label small" [for]="'sidebar-icon-' + stream.id">{{t('custom-icon')}}</label>
+          <div class="d-flex gap-1 mb-2">
+            <input #iconInput class="form-control form-control-sm" [id]="'sidebar-icon-' + stream.id" maxlength="32" [value]="stream.icon ?? ''" [placeholder]="t('custom-icon-placeholder')" />
+            <button type="button" class="btn btn-primary btn-sm" (click)="updateCustomSidebar(stream, iconInput.value)">{{t('custom-icon-save')}}</button>
+          </div>
+          <div class="d-flex flex-wrap gap-1 mb-2">
+            @for (emoji of ['⚔️', '📚', '🐉', '🌸', '🚀', '❤️']; track emoji) {
+              <button type="button" class="btn btn-outline-secondary btn-sm" [attr.aria-label]="t('custom-icon-choose', {icon: emoji})" (click)="updateCustomSidebar(stream, emoji)">{{emoji}}</button>
+            }
+          </div>
+          <button type="button" class="dropdown-item" (click)="updateCustomSidebar(stream, '')">{{t('custom-icon-reset')}}</button>
+          @if (stream.streamType === SideNavStreamType.SmartFilter) {
+            <button type="button" class="dropdown-item" (click)="updateCustomSidebar(stream, stream.icon ?? '', false)">{{t('custom-remove')}}</button>
+          }
+        </div>
+      </div>
+    }
+  </ng-template>
 
 </ng-container>
